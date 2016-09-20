@@ -26,9 +26,11 @@ st <- function(df, dept=NA, region=NA){
     df <- df[df$REGION == region, ]
   }
   df <- dcast(df, MOIS+ANNEE~CONVERSION, length, value.var="USERID")
+  df$AN <- df$AND + df$ANI
   df$CONVERTED <- df$AND + df$DT
   df$TOTAL <- df$AND + df$DT + df$DNT
   df$CONVERSION <- df$CONVERTED / df$TOTAL
+  df$PRODUCTION <- df$AN / (df$AN + df$DNT)
   df$DATE <- as.Date(ISOdate(df$ANNEE, df$MOIS, 1))
   return(df)
 }
@@ -51,8 +53,9 @@ server <- shinyServer(function(input, output) {
   }) 
   
   output$distPlot <- renderPlot({  
-    ggplot(data=data(), aes(DATE, CONVERSION)) +
-      geom_line() +
+    ggplot(data=data()) +
+      geom_line(aes(DATE, CONVERSION, colour="#0000FF")) + 
+      geom_line(aes(DATE, PRODUCTION, colour="#FF0000")) +
       xlab("Monthly View") +
       #scale_x_date(date_labels = "%b-%Y") +
       ylab("Conversion Rate") +
@@ -61,8 +64,8 @@ server <- shinyServer(function(input, output) {
   })
   
   output$volumePlot <- renderPlot({
-    ggplot(data=data(), aes(DATE, TOTAL)) +
-      geom_line() +
+    ggplot(data=data()) +
+      geom_line(aes(DATE, TOTAL)) +
       xlab("Monthly View") +
       expand_limits(y = 0) +
       #scale_x_date(date_labels = "%b-%Y") +
